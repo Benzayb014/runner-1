@@ -633,7 +633,18 @@ namespace GitHub.Runner.Listener
                             else if (string.Equals(message.MessageType, TaskAgentMessageTypes.ForceTokenRefresh))
                             {
                                 Trace.Info("Received ForceTokenRefreshMessage");
-                                await _listener.RefreshListenerTokenAsync(messageQueueLoopTokenSource.Token);
+                                await _listener.RefreshListenerTokenAsync();
+                            }
+                            else if (string.Equals(message.MessageType, RunnerRefreshConfigMessage.MessageType))
+                            {
+                                var runnerRefreshConfigMessage = JsonUtility.FromString<RunnerRefreshConfigMessage>(message.Body);
+                                Trace.Info($"Received RunnerRefreshConfigMessage for '{runnerRefreshConfigMessage.ConfigType}' config file");
+                                var configUpdater = HostContext.GetService<IRunnerConfigUpdater>();
+                                await configUpdater.UpdateRunnerConfigAsync(
+                                    runnerQualifiedId: runnerRefreshConfigMessage.RunnerQualifiedId,
+                                    configType: runnerRefreshConfigMessage.ConfigType,
+                                    serviceType: runnerRefreshConfigMessage.ServiceType,
+                                    configRefreshUrl: runnerRefreshConfigMessage.ConfigRefreshUrl);
                             }
                             else
                             {
